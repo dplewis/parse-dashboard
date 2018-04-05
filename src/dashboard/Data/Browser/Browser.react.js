@@ -54,6 +54,7 @@ export default class Browser extends DashboardView {
       counts: {},
       filteredCounts: {},
       clp: {},
+      indexes: {},
       filters: new List(),
       ordering: '-createdAt',
       selection: {},
@@ -92,6 +93,7 @@ export default class Browser extends DashboardView {
     this.updateOrdering = this.updateOrdering.bind(this);
     this.handlePointerClick = this.handlePointerClick.bind(this);
     this.handleCLPChange = this.handleCLPChange.bind(this);
+    this.handleIndexesChange = this.handleIndexesChange.bind(this);
     this.setRelation = this.setRelation.bind(this);
     this.showAddColumn = this.showAddColumn.bind(this);
     this.addRow = this.addRow.bind(this);
@@ -281,7 +283,10 @@ export default class Browser extends DashboardView {
       this.context.currentApp.getClassCount(className)
       .then(count => this.setState({ counts: { [className]: count, ...this.state.counts } }));
     })
-    this.setState({clp: this.props.schema.data.get('CLPs').toJS()});
+    this.setState({
+      clp: this.props.schema.data.get('CLPs').toJS(),
+      indexes: this.props.schema.data.get('Indexes').toJS()
+    });
   }
 
   async refresh() {
@@ -460,6 +465,15 @@ export default class Browser extends DashboardView {
     let p = this.props.schema.dispatch(ActionTypes.SET_CLP, {
       className: this.props.params.className,
       clp,
+    });
+    p.then(() => this.handleFetchedSchema());
+    return p;
+  }
+
+  handleIndexesChange(indexes) {
+    let p = this.props.schema.dispatch(ActionTypes.SET_INDEXES, {
+      className: this.props.params.className,
+      indexes,
     });
     p.then(() => this.handleFetchedSchema());
     return p;
@@ -866,6 +880,7 @@ export default class Browser extends DashboardView {
           <DataBrowser
             count={count}
             perms={this.state.clp[className]}
+            indexes={this.state.indexes[className]}
             schema={schema}
             userPointers={userPointers}
             filters={this.state.filters}
@@ -875,10 +890,10 @@ export default class Browser extends DashboardView {
             onDropClass={this.showDropClass}
             onExport={this.showExport}
             onChangeCLP={this.handleCLPChange}
+            onChangeIndexes={this.handleIndexesChange}
             onRefresh={this.refresh}
             onAttachRows={this.showAttachRowsDialog}
             onAttachSelectedRows={this.showAttachSelectedRowsDialog}
-
             columns={columns}
             className={className}
             fetchNextPage={this.fetchNextPage}

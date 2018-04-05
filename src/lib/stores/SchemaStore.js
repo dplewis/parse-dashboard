@@ -17,6 +17,7 @@ export const ActionTypes = keyMirror([
   'ADD_COLUMN',
   'DROP_COLUMN',
   'SET_CLP',
+  'SET_INDEXES'
 ]);
 
 // Schema state should be an Immutable Map with the following fields:
@@ -38,16 +39,19 @@ function SchemaStore(state, action) {
       ).then(({ results }) => {
         let classes = {};
         let CLPs = {};
+        let Indexes = {};
         if (results) {
-          results.forEach(({ className, fields, classLevelPermissions }) => {
+          results.forEach(({ className, fields, classLevelPermissions, indexes }) => {
             classes[className] = Map(fields);
             CLPs[className] = Map(classLevelPermissions);
+            Indexes[className] = Map(indexes);
           });
         }
         return Map({
           lastFetch: new Date(),
           classes: Map(classes),
           CLPs: Map(CLPs),
+          Indexes: Map(Indexes),
         });
       });
     case ActionTypes.CREATE_CLASS:
@@ -56,10 +60,11 @@ function SchemaStore(state, action) {
         'schemas/' + action.className,
         { className: action.className },
         { useMasterKey: true }
-      ).then(({ fields }) => {
+      ).then(({ fields, indexes }) => {
         return state
         .setIn(['classes', action.className], Map(fields))
-        .setIn(['CLPs', action.className], Map({}));
+        .setIn(['CLPs', action.className], Map({}))
+        .setIn(['Indexes', action.className], Map(indexes));
       });
     case ActionTypes.DROP_CLASS:
       return action.app.apiRequest(
@@ -70,7 +75,8 @@ function SchemaStore(state, action) {
       ).then(() => {
         return state
         .deleteIn(['classes', action.className])
-        .deleteIn(['CLPs', action.className]);
+        .deleteIn(['CLPs', action.className])
+        .deleteIn(['Indexes', action.className]);
       });
     case ActionTypes.ADD_COLUMN:
       let newField = {
@@ -86,8 +92,10 @@ function SchemaStore(state, action) {
         'schemas/' + action.className,
         { className: action.className, fields: newField },
         { useMasterKey: true }
-      ).then(({ fields }) => {
-        return state.setIn(['classes', action.className], Map(fields));
+      ).then(({ fields, indexes }) => {
+        return state
+        .setIn(['classes', action.className], Map(fields))
+        .setIn(['Indexes', action.className], Map(indexes));
       });
     case ActionTypes.DROP_COLUMN:
       let droppedField = {
@@ -111,6 +119,15 @@ function SchemaStore(state, action) {
         { useMasterKey: true }
       ).then(({ classLevelPermissions, className }) => {
         return state.setIn(['CLPs', className], Map(classLevelPermissions));
+      });
+    case ActionTypes.SET_INDEXES:
+      return action.app.apiRequest(
+        'PUT',
+        'schemas/' + action.className,
+        { indexes: action.indexes },
+        { useMasterKey: true }
+      ).then(({ indexes, className }) => {
+        return state.setIn(['Indexes', className], Map(indexes));
       });
   }
 }

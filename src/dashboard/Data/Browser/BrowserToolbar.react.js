@@ -12,6 +12,7 @@ import MenuItem       from 'components/BrowserMenu/MenuItem.react';
 import prettyNumber   from 'lib/prettyNumber';
 import React          from 'react';
 import SecurityDialog from 'dashboard/Data/Browser/SecurityDialog.react';
+import ShowIndexesDialog from 'dashboard/Data/Browser/ShowIndexesDialog.react';
 import Separator      from 'components/BrowserMenu/Separator.react';
 import styles         from 'dashboard/Data/Browser/Browser.scss';
 import Toolbar        from 'components/Toolbar/Toolbar.react';
@@ -21,6 +22,7 @@ let BrowserToolbar = ({
   classNameForPermissionsEditor,
   count,
   perms,
+  indexes,
   schema,
   userPointers,
   filters,
@@ -38,6 +40,7 @@ let BrowserToolbar = ({
   onDeleteRows,
   onDropClass,
   onChangeCLP,
+  onChangeIndexes,
   onRefresh,
   hidePerms,
 
@@ -151,6 +154,13 @@ let BrowserToolbar = ({
         className={classNameForPermissionsEditor}
         onChangeCLP={onChangeCLP}
         userPointers={userPointers} /> : <noscript />}
+      {enableSecurityDialog ? <div className={styles.toolbarSeparator} /> : <noscript/>}
+      {enableSecurityDialog ? <ShowIndexesDialog
+        setCurrent={setCurrent}
+        disabled={!!relation}
+        indexes={indexes}
+        className={className}
+        onChangeIndexes={onChangeIndexes} /> : <noscript />}
       {enableSecurityDialog ? <div className={styles.toolbarSeparator} /> : <noscript/>}
       {menu}
     </Toolbar>
